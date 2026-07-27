@@ -147,3 +147,88 @@ export const documentTypes = mysqlTable('document_types', {
     entityIdx: index('audit_entity_idx').on(t.entityType, t.entityId),
     createdIdx: index('audit_created_idx').on(t.createdAt),
   }));
+
+  // ---- Providers, products, access, pricing ----
+
+export const providers = mysqlTable('providers', {
+  id: int('id').autoincrement().primaryKey(),
+  code: varchar('code', { length: 50 }).notNull(), // surepass | setu | cashfree
+  name: varchar('name', { length: 100 }).notNull(),
+  baseUrl: varchar('base_url', { length: 255 }),
+  status: varchar('status', { length: 20 }).default('active'),
+}, (t) => ({
+  codeIdx: uniqueIndex('provider_code_idx').on(t.code),
+}));
+
+export const apiProducts = mysqlTable('api_products', {
+  id: int('id').autoincrement().primaryKey(),
+  code: varchar('code', { length: 50 }).notNull(), // pan_verify | bank_verify
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  providerId: int('provider_id').references(() => providers.id),
+  defaultPrice: decimal('default_price', { precision: 10, scale: 2 }).notNull(),
+  ourCost: decimal('our_cost', { precision: 10, scale: 2 }),
+  status: varchar('status', { length: 20 }).default('active'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (t) => ({
+  codeIdx: uniqueIndex('product_code_idx').on(t.code),
+}));
+
+export const clientApiAccess = mysqlTable('client_api_access', {
+  id: int('id').autoincrement().primaryKey(),
+  clientId: int('client_id').notNull().references(() => clients.id),
+  productId: int('product_id').notNull().references(() => apiProducts.id),
+  status: varchar('status', { length: 20 }).notNull().default('active'),
+  enabledBy: int('enabled_by').references(() => adminUsers.id),
+  enabledAt: datetime('enabled_at').default(sql`CURRENT_TIMESTAMP`),
+}, (t) => ({
+  clientProductIdx: uniqueIndex('access_client_product_idx').on(t.clientId, t.productId),
+}));
+
+export const clientPricing = mysqlTable('client_pricing', {
+  id: int('id').autoincrement().primaryKey(),
+  clientId: int('client_id').notNull().references(() => clients.id),
+  productId: int('product_id').notNull().references(() => apiProducts.id),
+  price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+  updatedBy: int('updated_by').references(() => adminUsers.id),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (t) => ({
+  clientProductIdx: uniqueIndex('pricing_client_product_idx').on(t.clientId, t.productId),
+}));
+
+// ---- API keys & call logs ----
+
+export const apiKeys = mysqlTable('api_keys', {
+  id: int('id').autoincrement().primaryKey(),
+  clientId: int('client_id').notNull().references(() => clients.id),
+  keyHash: char('key_hash', { length: 64 }).notNull(),
+  keyPrefix: varchar('key_prefix', { length: 12 }).notNull(),
+  label: varchar('label', { length: 100 }),
+  ipAllowlist: text('ip_allowlist'),
+  status: varchar('status', { length: 20 }).notNull().default('active'),
+  lastUsedAt: datetime('last_used_at'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (t) => ({
+  prefixIdx: index('key_prefix_idx').on(t.keyPrefix),
+}));
+
+export const apiCallLogs = mysqlTable('api_call_logs', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  clientId: int('client_id').notNull().references(() => clients.id),
+  productId: int('product_id').notNull().references(() => apiProducts.id),
+  apiKeyId: int('api_key_id'),
+  requestBody: json('request_body'),
+  responseBody: json('response_body'),
+  providerName: varchar('provider_name', { length: 50 }),
+  providerRef: varchar('provider_ref', { length: 100 }),
+  httpStatus: int('http_status'),
+  status: varchar('status', { length: 20 }).notNull(), // success | failed | provider_down
+  cost: decimal('cost', { precision: 10, scale: 2 }).notNull().default('0.00'),
+  durationMs: int('duration_ms'),
+  clientIp: varchar('client_ip', { length: 45 }),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+}, (t) => ({
+  clientCreatedIdx: index('log_client_created_idx').on(t.clientId, t.createdAt),
+  statusCreatedIdx: index('log_status_created_idx').on(t.status, t.createdAt),
+}));
