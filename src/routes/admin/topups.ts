@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import { db } from '../../db/index.js';
-import { wallets, walletTransactions, topupRequests, auditLog } from '../../db/schema.js';
+import { wallets, walletTransactions, topupRequests, auditLog, clients } from '../../db/schema.js';
 import { authenticateAdmin, type AuthenticatedAdminRequest } from '../../middleware/adminAuth.js';
 import { AppError } from '../../middleware/error.js';
 
@@ -77,4 +77,63 @@ adminTopupsRouter.post('/:id/approve', authenticateAdmin, async (req, res) => {
     });
   
     res.json({ topupRequestId: topupId, status: 'approved' });
+  });
+
+  adminTopupsRouter.get('/', authenticateAdmin, async (req, res) => {
+    const status = req.query.status as string | undefined;
+  
+    const query = db
+      .select({
+        id: topupRequests.id,
+        walletId: topupRequests.walletId,
+        amount: topupRequests.amount,
+        bankRef: topupRequests.bankRef,
+        transferMode: topupRequests.transferMode,
+        transferDate: topupRequests.transferDate,
+        status: topupRequests.status,
+        remarks: topupRequests.remarks,
+        createdAt: topupRequests.createdAt,
+        clientId: wallets.clientId,
+        clientName: clients.name,
+      })
+      .from(topupRequests)
+      .innerJoin(wallets, eq(topupRequests.walletId, wallets.id))
+      .innerJoin(clients, eq(wallets.clientId, clients.id))
+      .orderBy(desc(topupRequests.createdAt));
+  
+    const results = status
+      ? await query.where(eq(topupRequests.status, status))
+      : await query;
+  
+    res.json({ topupRequests: results });
+  });
+
+  adminTopupsRouter.post('/:id/reject', authenticateAdmin, async (req, res) => {
+    const topupId = Number(req.params.id);
+    const adminId = (req as AuthenticatedAdminRequest).admin.id;
+    const { remarks } = req.body;
+    const ip = req.ip ?? '';
+  
+    await db.transaction(async (tx) => {
+      const [reqRows] = await tx.execute(
+        sql`SELECT * FROM topup_requests WHERE id = ${topupId} AND status = 'pending' FOR UPDATE`
+      );
+      const row = (reqRows as any[])[0];
+      if (!row) throw new AppError(409, 'NOT_PENDING', 'Top-up not found or already processed');
+  
+      await tx.update(topupRequests)
+        .set({ status: 'rejected', remarks, reviewedBy: adminId, reviewedAt: new Date() })
+        .where(eq(topupRequests.id, topupId));
+  
+      await tx.insert(auditLog).values({
+        adminId,
+        action: 'topup_rejected',
+        entityType: 'topup_request',
+        entityId: String(topupId),
+        newValue: { remarks },
+        ipAddress: ip,
+      });
+    });
+  
+    res.json({ topupRequestId: topupId, status: 'rejected' });
   });
