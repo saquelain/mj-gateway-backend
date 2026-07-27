@@ -17,9 +17,11 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
+    "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
-    "mysql2": "^3.23.1"
+    "mysql2": "^3.23.1",
+    "rate-limiter-flexible": "^11.2.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
