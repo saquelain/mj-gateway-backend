@@ -23,3 +23,33 @@ adminKeysRouter.post('/:clientId/keys', authenticateAdmin, async (req, res) => {
     warning: 'Save this key now. It will not be shown again.',
   });
 });
+
+adminKeysRouter.get('/:clientId/keys', authenticateAdmin, async (req, res) => {
+    const clientId = Number(req.params.clientId);
+  
+    const keys = await db
+      .select({
+        id: apiKeys.id,
+        keyPrefix: apiKeys.keyPrefix,
+        label: apiKeys.label,
+        status: apiKeys.status,
+        lastUsedAt: apiKeys.lastUsedAt,
+        createdAt: apiKeys.createdAt,
+      })
+      .from(apiKeys)
+      .where(eq(apiKeys.clientId, clientId))
+      .orderBy(apiKeys.id);
+  
+    res.json({ keys });
+  });
+  
+  adminKeysRouter.post('/:clientId/keys/:keyId/revoke', authenticateAdmin, async (req, res) => {
+    const keyId = Number(req.params.keyId);
+  
+    const [key] = await db.select().from(apiKeys).where(eq(apiKeys.id, keyId)).limit(1);
+    if (!key) throw new AppError(404, 'KEY_NOT_FOUND', 'API key not found');
+  
+    await db.update(apiKeys).set({ status: 'revoked' }).where(eq(apiKeys.id, keyId));
+  
+    res.json({ keyId, status: 'revoked' });
+  });
