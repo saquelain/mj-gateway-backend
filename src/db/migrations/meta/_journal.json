@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1785138326031,
+      "tag": "0000_mysterious_tony_stark",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1785138896130,
+      "tag": "0001_military_orphan",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1785140649511,
+      "tag": "0002_dusty_xorn",
+      "breakpoints": true
+    }
+  ]
+}
