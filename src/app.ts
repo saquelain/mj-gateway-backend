@@ -10,6 +10,7 @@ import { adminKeysRouter } from './routes/admin/keys.js';
 import { panVerifyRouter } from './routes/api/panVerify.js';
 import { adminUsageRouter } from './routes/admin/usage.js';
 import { adminDocumentTypesRouter } from './routes/admin/documentTypes.js';
+import { adminStatsRouter } from './routes/admin/stats.js';
 
 import cors from 'cors';
 
@@ -35,6 +36,7 @@ app.use('/admin/clients', adminUsageRouter);
 app.use('/api/v1', panVerifyRouter);
 app.use('/admin/topups', adminTopupsRouter);
 app.use('/admin/document-types', adminDocumentTypesRouter);
+app.use('/admin/stats', adminStatsRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
