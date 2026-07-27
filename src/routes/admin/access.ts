@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { clientApiAccess, clientPricing, apiProducts, clients } from '../../db/schema.js';
 import { authenticateAdmin, type AuthenticatedAdminRequest } from '../../middleware/adminAuth.js';
@@ -50,3 +50,25 @@ adminAccessRouter.put('/:clientId/pricing', authenticateAdmin, async (req, res) 
 
   res.json({ clientId, productId: product.id, price });
 });
+
+adminAccessRouter.get('/:clientId/access', authenticateAdmin, async (req, res) => {
+    const clientId = Number(req.params.clientId);
+  
+    const rows = await db.execute(sql`
+      SELECT
+        p.id AS product_id,
+        p.code,
+        p.name,
+        p.default_price,
+        ca.status AS access_status,
+        COALESCE(cp.price, p.default_price) AS effective_price,
+        cp.price AS custom_price
+      FROM api_products p
+      LEFT JOIN client_api_access ca ON ca.product_id = p.id AND ca.client_id = ${clientId}
+      LEFT JOIN client_pricing cp ON cp.product_id = p.id AND cp.client_id = ${clientId}
+      WHERE p.status = 'active'
+      ORDER BY p.id
+    `);
+  
+    res.json({ products: rows[0] });
+  });
