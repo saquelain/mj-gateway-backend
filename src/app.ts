@@ -9,6 +9,8 @@ import { adminAccessRouter } from './routes/admin/access.js';
 import { adminKeysRouter } from './routes/admin/keys.js';
 import { panVerifyRouter } from './routes/api/panVerify.js';
 import { adminUsageRouter } from './routes/admin/usage.js';
+import { adminDocumentTypesRouter } from './routes/admin/documentTypes.js';
+
 import cors from 'cors';
 
 export const app = express();
@@ -32,6 +34,7 @@ app.use('/admin/clients', adminKeysRouter);
 app.use('/admin/clients', adminUsageRouter);
 app.use('/api/v1', panVerifyRouter);
 app.use('/admin/topups', adminTopupsRouter);
+app.use('/admin/document-types', adminDocumentTypesRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
