@@ -9,9 +9,14 @@ import { adminAccessRouter } from './routes/admin/access.js';
 import { adminKeysRouter } from './routes/admin/keys.js';
 import { panVerifyRouter } from './routes/api/panVerify.js';
 import { adminUsageRouter } from './routes/admin/usage.js';
+import cors from 'cors';
 
 export const app = express();
 
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
+  credentials: true,
+}));
 app.use(express.json());
 
 app.get('/health', (_req, res) => {

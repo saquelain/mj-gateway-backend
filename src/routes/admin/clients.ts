@@ -5,6 +5,7 @@ import { hashPassword } from '../../services/auth.js';
 import { authenticateAdmin } from '../../middleware/adminAuth.js';
 import { AppError } from '../../middleware/error.js';
 import crypto from 'crypto';
+import { eq } from 'drizzle-orm';
 
 export const adminClientsRouter = Router();
 
@@ -50,4 +51,30 @@ adminClientsRouter.post('/', authenticateAdmin, async (req, res) => {
     clientId: result,
     tempPassword, // shown once — client should reset on first login
   });
+});
+
+adminClientsRouter.get('/', authenticateAdmin, async (req, res) => {
+  const clientList = await db
+    .select({
+      id: clients.id,
+      name: clients.name,
+      companyName: clients.companyName,
+      email: clients.email,
+      kycStatus: clients.kycStatus,
+      status: clients.status,
+      createdAt: clients.createdAt,
+    })
+    .from(clients)
+    .orderBy(clients.id);
+
+  res.json({ clients: clientList });
+});
+
+adminClientsRouter.get('/:id', authenticateAdmin, async (req, res) => {
+  const clientId = Number(req.params.id);
+
+  const [client] = await db.select().from(clients).where(eq(clients.id, clientId)).limit(1);
+  if (!client) throw new AppError(404, 'CLIENT_NOT_FOUND', 'Client not found');
+
+  res.json({ client });
 });
