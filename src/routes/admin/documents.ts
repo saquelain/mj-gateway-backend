@@ -124,3 +124,36 @@ adminDocumentsRouter.patch(
       res.json({ documentId: docId, status: decision });
     }
   );
+
+  adminDocumentsRouter.get('/:clientId/documents', authenticateAdmin, async (req, res) => {
+    const clientId = Number(req.params.clientId);
+  
+    const docs = await db
+      .select({
+        id: clientDocuments.id,
+        docTypeId: clientDocuments.docTypeId,
+        docTypeCode: documentTypes.code,
+        docTypeName: documentTypes.name,
+        fileName: clientDocuments.fileName,
+        docNumber: clientDocuments.docNumber,
+        status: clientDocuments.status,
+        remarks: clientDocuments.remarks,
+        uploadedByType: clientDocuments.uploadedByType,
+        createdAt: clientDocuments.createdAt,
+      })
+      .from(clientDocuments)
+      .innerJoin(documentTypes, eq(clientDocuments.docTypeId, documentTypes.id))
+      .where(eq(clientDocuments.clientId, clientId))
+      .orderBy(clientDocuments.id);
+  
+    res.json({ documents: docs });
+  });
+
+  adminDocumentsRouter.get('/meta/document-types', authenticateAdmin, async (_req, res) => {
+    const types = await db
+      .select()
+      .from(documentTypes)
+      .where(eq(documentTypes.status, 'active'));
+  
+    res.json({ documentTypes: types });
+  });
