@@ -14,6 +14,7 @@ import { adminStatsRouter } from './routes/admin/stats.js';
 import { clientAuthRouter } from './routes/client/auth.js';
 import { clientWalletRouter } from './routes/client/wallet.js';
 import { clientTopupsRouter } from './routes/client/topups.js';
+import { clientDocumentsRouter } from './routes/client/documents.js';
 
 import cors from 'cors';
 
@@ -44,6 +45,7 @@ app.use('/admin/stats', adminStatsRouter);
 app.use('/client/auth', clientAuthRouter);
 app.use('/client/me', clientWalletRouter);
 app.use('/client/me', clientTopupsRouter);
+app.use('/client/me', clientDocumentsRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
