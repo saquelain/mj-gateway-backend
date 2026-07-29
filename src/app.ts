@@ -11,6 +11,8 @@ import { panVerifyRouter } from './routes/api/panVerify.js';
 import { adminUsageRouter } from './routes/admin/usage.js';
 import { adminDocumentTypesRouter } from './routes/admin/documentTypes.js';
 import { adminStatsRouter } from './routes/admin/stats.js';
+import { clientAuthRouter } from './routes/client/auth.js';
+import { clientWalletRouter } from './routes/client/wallet.js';
 
 import cors from 'cors';
 
@@ -37,6 +39,9 @@ app.use('/api/v1', panVerifyRouter);
 app.use('/admin/topups', adminTopupsRouter);
 app.use('/admin/document-types', adminDocumentTypesRouter);
 app.use('/admin/stats', adminStatsRouter);
+
+app.use('/client/auth', clientAuthRouter);
+app.use('/client/me', clientWalletRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

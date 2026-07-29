@@ -24,3 +24,16 @@ export function signAdminToken(payload: AdminJwtPayload): string {
 export function verifyAdminToken(token: string): AdminJwtPayload {
   return jwt.verify(token, JWT_SECRET) as AdminJwtPayload;
 }
+
+export interface ClientJwtPayload {
+  uid: number;
+  cid: number; // client id
+}
+
+export function signClientToken(payload: ClientJwtPayload): string {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+}
+
+export function verifyClientToken(token: string): ClientJwtPayload {
+  return jwt.verify(token, JWT_SECRET) as ClientJwtPayload;
+}
