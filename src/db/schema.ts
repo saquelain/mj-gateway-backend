@@ -205,6 +205,7 @@ export const apiKeys = mysqlTable('api_keys', {
   keyHash: char('key_hash', { length: 64 }).notNull(),
   keyPrefix: varchar('key_prefix', { length: 12 }).notNull(),
   label: varchar('label', { length: 100 }),
+  mode: varchar('mode', { length: 10 }).notNull().default('live'),
   ipAllowlist: text('ip_allowlist'),
   status: varchar('status', { length: 20 }).notNull().default('active'),
   lastUsedAt: datetime('last_used_at'),

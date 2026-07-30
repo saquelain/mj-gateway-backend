@@ -16,6 +16,7 @@ clientKeysRouter.get('/keys', authenticateClient, async (req, res) => {
       id: apiKeys.id,
       keyPrefix: apiKeys.keyPrefix,
       label: apiKeys.label,
+      mode: apiKeys.mode,
       status: apiKeys.status,
       lastUsedAt: apiKeys.lastUsedAt,
       createdAt: apiKeys.createdAt,
@@ -28,17 +29,18 @@ clientKeysRouter.get('/keys', authenticateClient, async (req, res) => {
 });
 
 clientKeysRouter.post('/keys', authenticateClient, async (req, res) => {
-  const { clientId } = (req as AuthenticatedClientRequest).clientUser;
-  const { label } = req.body;
-
-  const { id, rawKey } = await generateApiKey(clientId, label);
-
-  res.status(201).json({
-    keyId: id,
-    apiKey: rawKey,
-    warning: 'Save this key now. It will not be shown again.',
+    const { clientId } = (req as AuthenticatedClientRequest).clientUser;
+    const { label, mode } = req.body;
+  
+    const { id, rawKey } = await generateApiKey(clientId, label, mode === 'test' ? 'test' : 'live');
+  
+    res.status(201).json({
+      keyId: id,
+      apiKey: rawKey,
+      mode: mode === 'test' ? 'test' : 'live',
+      warning: 'Save this key now. It will not be shown again.',
+    });
   });
-});
 
 clientKeysRouter.post('/keys/:keyId/revoke', authenticateClient, async (req, res) => {
   const { clientId } = (req as AuthenticatedClientRequest).clientUser;

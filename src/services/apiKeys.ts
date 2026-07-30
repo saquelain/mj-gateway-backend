@@ -3,15 +3,16 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { apiKeys } from '../db/schema.js';
 
-export async function generateApiKey(clientId: number, label?: string) {
-  const raw = 'rk_live_' + crypto.randomBytes(24).toString('hex');
-  const keyHash = crypto.createHash('sha256').update(raw).digest('hex');
-  const keyPrefix = raw.slice(0, 12);
-
-  const [inserted] = await db.insert(apiKeys).values({ clientId, keyHash, keyPrefix, label });
-
-  return { id: inserted.insertId, rawKey: raw }; // rawKey shown ONCE, never recoverable
-}
+export async function generateApiKey(clientId: number, label?: string, mode: 'test' | 'live' = 'live') {
+    const prefix = mode === 'test' ? 'rk_test_' : 'rk_live_';
+    const raw = prefix + crypto.randomBytes(24).toString('hex');
+    const keyHash = crypto.createHash('sha256').update(raw).digest('hex');
+    const keyPrefix = raw.slice(0, 12);
+  
+    const [inserted] = await db.insert(apiKeys).values({ clientId, keyHash, keyPrefix, label, mode });
+  
+    return { id: inserted.insertId, rawKey: raw };
+  }
 
 export async function identifyClient(incomingKey?: string) {
   if (!incomingKey) return null;
@@ -27,5 +28,5 @@ export async function identifyClient(incomingKey?: string) {
     ))
     .limit(1);
 
-  return row ?? null;
+  return row ?? null; // row already includes `mode` since we select the full row
 }

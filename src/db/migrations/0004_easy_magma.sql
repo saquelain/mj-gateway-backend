@@ -1,0 +1,1 @@
+ALTER TABLE `api_keys` ADD `mode` varchar(10) DEFAULT 'live' NOT NULL;
